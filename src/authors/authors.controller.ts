@@ -8,22 +8,22 @@ export class AuthorsController {
   constructor(private readonly authorsService: AuthorsService) {}
 
   @Get()
-  getAuthors() {
+  async getAuthors() {
     return this.authorsService.getAuthors();
   }
 
   @Post()
-  createAuthor(@Body() createAuthorDto: CreateAuthorDto) {
+  async createAuthor(@Body() createAuthorDto: CreateAuthorDto) {
     return this.authorsService.createAuthor(createAuthorDto);
   }
 
   @Patch('update/:id')
-  updateAuthor(@Param('id') id: number, @Body() updateAuthorDto: UpdateAuthorDto) {
+  async updateAuthor(@Param('id') id: number, @Body() updateAuthorDto: UpdateAuthorDto) {
     return this.authorsService.updateAuthor(id, updateAuthorDto)
   }
 
   @Delete('delete/:id')
-  deleteAuthor(@Param('id') id: number) {
+  async deleteAuthor(@Param('id') id: number) {
     return this.authorsService.deleteAuthor(id)
   }
 }

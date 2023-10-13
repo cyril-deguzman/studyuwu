@@ -27,6 +27,12 @@ export class BooksAuthorService {
         HttpStatus.FOUND,
       );
 
+    if (!this.bookService.hasBook(bookAuthor.bookId))
+      throw new HttpException('Book does not exist', HttpStatus.NOT_FOUND);
+
+    if (!this.authorService.hasAuthor(bookAuthor.authorId))
+      throw new HttpException('Author does not exist', HttpStatus.NOT_FOUND);
+
     this.booksAuthor.set(key, bookAuthor);
 
     return this.booksAuthor.get(key);

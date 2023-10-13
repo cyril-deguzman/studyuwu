@@ -62,4 +62,8 @@ export class BooksService {
 
     return this.books.get(bookId);
   }
+
+  hasBook(bookId: number): boolean {
+    return this.books.has(bookId);
+  }
 }

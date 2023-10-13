@@ -8,82 +8,124 @@ import { BookAuthor } from './interfaces/book-author.interface';
 @Injectable()
 export class BooksAuthorService {
   constructor(
-    private readonly bookService: BooksService, 
-    private readonly authorService: AuthorsService
+    private readonly bookService: BooksService,
+    private readonly authorService: AuthorsService,
   ) {
-    this.booksAuthor.set(`${1}${1}`, 
-      {authorId: 1, bookId: 1, isMainAuthor: true}
-    ).set(`${2}${2}`,
-      {authorId: 2, bookId: 2, isMainAuthor: true
-    })
+    this.booksAuthor
+      .set(`${1}${1}`, { authorId: 1, bookId: 1, isMainAuthor: true })
+      .set(`${2}${2}`, { authorId: 2, bookId: 2, isMainAuthor: true });
   }
 
-  private readonly booksAuthor: Map<string, BookAuthor> = new Map()
+  private readonly booksAuthor: Map<string, BookAuthor> = new Map();
 
   addAuthorToBook(bookAuthor: BookAuthor): BookAuthor {
-    const key = `${bookAuthor.authorId}${bookAuthor.bookId}`
+    const key = `${bookAuthor.authorId}${bookAuthor.bookId}`;
 
-    if(this.booksAuthor.has(key))
+    if (this.booksAuthor.has(key))
       throw new HttpException(
-        'This author is already associated with this book', 
-        HttpStatus.FOUND
+        'This author is already associated with this book',
+        HttpStatus.FOUND,
       );
 
-    this.booksAuthor.set(key, bookAuthor)
+    this.booksAuthor.set(key, bookAuthor);
 
-    return this.booksAuthor.get(key)
+    return this.booksAuthor.get(key);
   }
 
   removeAuthorFromBook(bookAuthorKey: string): BookAuthor {
-    if(!this.booksAuthor.has(bookAuthorKey))
+    if (!this.booksAuthor.has(bookAuthorKey))
       throw new HttpException(
-        'This author does not exist or is simply not an author of the specified book', 
-        HttpStatus.NOT_FOUND
+        'This author does not exist or is simply not an author of the specified book',
+        HttpStatus.NOT_FOUND,
       );
 
-    const bookAuthor = this.booksAuthor.get(bookAuthorKey)
+    const bookAuthor = this.booksAuthor.get(bookAuthorKey);
 
-    if(bookAuthor.isMainAuthor)
-      throw new HttpException('Main author cannot be removed', HttpStatus.FORBIDDEN);
-    
-    this.booksAuthor.delete(bookAuthorKey)
+    if (bookAuthor.isMainAuthor)
+      throw new HttpException(
+        'Main author cannot be removed',
+        HttpStatus.FORBIDDEN,
+      );
+
+    this.booksAuthor.delete(bookAuthorKey);
     return bookAuthor;
   }
 
-  getBookAuthors(bookId: number): Author[] {
-    const authors: Author[] = []
+  getAllBookAuthors() {
+    return Array.from(this.booksAuthor.values());
+  }
 
-    for(const [key, value] of this.booksAuthor) 
-      if(value.bookId == bookId) {
-        authors.push(this.authorService.getOneAuthor(value.authorId))
+  getBookAuthors(bookId: number): Author[] {
+    const authors: Author[] = [];
+
+    for (const [key, value] of this.booksAuthor)
+      if (value.bookId == bookId) {
+        authors.push(this.authorService.getOneAuthor(value.authorId));
       }
-        
-    return authors
+
+    return authors;
   }
 
   getBookMainAuthor(bookId: number): Author {
-    for(const [key, value] of this.booksAuthor) 
-      if(value.bookId == bookId) 
-        if(value.isMainAuthor)
-          return this.authorService.getOneAuthor(value.authorId)
+    for (const [key, value] of this.booksAuthor)
+      if (value.bookId == bookId)
+        if (value.isMainAuthor)
+          return this.authorService.getOneAuthor(value.authorId);
   }
 
   removeAllAuthorsFromBook(bookId: number): BookAuthor[] {
-    const bookAuthors: BookAuthor[] = []
+    const bookAuthors: BookAuthor[] = [];
 
-    for(const [key, value] of this.booksAuthor) 
-      if(value.bookId == bookId) {
+    for (const [key, value] of this.booksAuthor)
+      if (value.bookId == bookId) {
         bookAuthors.push(this.booksAuthor.get(key));
         this.booksAuthor.delete(key);
-      } 
-        
+      }
+
     return bookAuthors;
   }
 
-  deleteBook(bookId: number): Book & {authors: BookAuthor[]} {
-    const deletedBook = this.bookService.deleteBook(bookId)
-    const removedAuthors = this.removeAllAuthorsFromBook(bookId)
+  removeAuthorsConnections(authorId: number): BookAuthor[] {
+    const bookAuthors: BookAuthor[] = [];
 
-    return {...deletedBook, authors: removedAuthors}
+    for (const [key, value] of this.booksAuthor)
+      if (value.authorId == authorId) {
+        bookAuthors.push(this.booksAuthor.get(key));
+        this.booksAuthor.delete(key);
+      }
+
+    return bookAuthors;
+  }
+
+  deleteBook(bookId: number): Book & { authors: BookAuthor[] } {
+    const deletedBook = this.bookService.deleteBook(bookId);
+    const removedAuthors = this.removeAllAuthorsFromBook(bookId);
+
+    return { ...deletedBook, authors: removedAuthors };
+  }
+
+  deleteAuthor(
+    authorId: number,
+  ): Author & { removedConnections: BookAuthor[] } {
+    if (this.hasMainAuthoredBook(authorId))
+      throw new HttpException(
+        'Author still has a book he is a main author of. Delete books they have been a main author first.',
+        HttpStatus.FORBIDDEN,
+      );
+
+    const deletedAuthor = this.authorService.deleteAuthor(authorId);
+    const removedConnections = this.removeAuthorsConnections(authorId);
+
+    return { ...deletedAuthor, removedConnections: removedConnections };
+  }
+
+  hasMainAuthoredBook(authorId: number): boolean {
+    let res = false;
+
+    for (const [key, value] of this.booksAuthor) {
+      if (value.authorId == authorId && value.isMainAuthor) res = true;
+    }
+
+    return res;
   }
 }

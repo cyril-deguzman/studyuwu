@@ -1,9 +1,9 @@
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateAuthorDto {
   @IsNumber()
   @IsNotEmpty()
-  id: number;
+  authorId: number;
 
   @IsString()
   @IsNotEmpty()
@@ -12,4 +12,12 @@ export class CreateAuthorDto {
   @IsString()
   @IsNotEmpty()
   lastName: string;
+
+  @IsEmail()
+  @IsOptional()
+  email: string;
+
+  @IsString()
+  @IsOptional()
+  country: string;
 }

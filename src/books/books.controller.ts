@@ -1,15 +1,33 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { BooksAuthorService } from 'src/books-author/books-author.service';
+import { CreateBookAuthorDto } from 'src/books-author/dto/create-book.dto';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 
 @Controller('books')
 export class BooksController {
-  constructor(private readonly booksService: BooksService) {}
+  constructor(
+    private readonly booksService: BooksService, 
+    private readonly booksAuthorService: BooksAuthorService 
+  ) {}
 
   @Post()
   async createBook(@Body() createBookDto: CreateBookDto) {
     return this.booksService.createBook(createBookDto);
+  }
+
+  @Post('addAuthor') 
+  async addAuthorToBook(@Body() createBookAuthorDto: CreateBookAuthorDto) {
+    return this.booksAuthorService.addAuthorToBook(createBookAuthorDto);
+  }
+
+  @Get(':id')
+  async getOneBook(@Param('id') id: number) {
+    const book = this.booksService.getOneBook(id);
+    const bookAuthors = this.booksAuthorService.getBookAuthors(id);
+
+    return {...book, authors: bookAuthors}
   }
 
   @Get()
@@ -24,6 +42,11 @@ export class BooksController {
 
   @Delete('delete/:id')
   async deleteBook(@Param('id') id: number) {
-    return this.booksService.deleteBook(id)
+    return this.booksAuthorService.deleteBook(id)
+  }
+
+  @Delete('removeAuthor/:authorId/:bookId')
+  async removeAuthorFromBook(@Param('authorId') authorId: number, @Param('bookId') bookId: number) {
+    return this.booksAuthorService.removeAuthorFromBook(`${authorId}${bookId}`)
   }
 }

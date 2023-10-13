@@ -1,47 +1,60 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { Book } from './interfaces.ts/create-book.dto';
+import { Book } from './interfaces/book.interface';
 
 @Injectable()
 export class BooksService {
-  private readonly books: Map<number, Book> = new Map();
-
   constructor(){
     this.books.set(1, {
-      id: 1,
-      title: "test",
-      author: "author",
-      pages: 1,
+      bookId: 1,
+      title: "Jujutsu Kaisen",
+      genre: "Shounen",
+    }).set(2, {
+      bookId: 2,
+      title: "Old-fashioned Cupcake",
+      genre: "Romance, Slice-of-life"
     })
   }
 
-  createBook(createBookDto: CreateBookDto) {
-    this.books.set(createBookDto.id, createBookDto);
-    return this.books.get(createBookDto.id)
+  private readonly books: Map<number, Book> = new Map();
+
+  createBook(createBookDto: CreateBookDto): Book {
+    if(this.books.has(createBookDto.bookId))
+      throw new HttpException('Book with same id already exists', HttpStatus.FORBIDDEN);
+
+    this.books.set(createBookDto.bookId, createBookDto);
+    return this.books.get(createBookDto.bookId)
   }
 
-  deleteBook(id: number) {
-    if(!this.books.has(id))
-      throw new HttpException('Does not Exist', HttpStatus.NOT_FOUND);
+  deleteBook(bookId: number): Book {
+    if(!this.books.has(bookId))
+      throw new HttpException('Book does not Exist', HttpStatus.NOT_FOUND);
     
-    const deletedBook = this.books.get(id);
-    this.books.delete(id);
+    const deletedBook = this.books.get(bookId);
+    this.books.delete(bookId);
 
     return deletedBook
   }
 
-  updateBook(id: number, updateBookDto: UpdateBookDto) {
-    if(!this.books.has(id))
-      throw new HttpException('Does not Exist', HttpStatus.NOT_FOUND);
+  updateBook(bookId: number, updateBookDto: UpdateBookDto): Book {
+    if(!this.books.has(bookId))
+      throw new HttpException('Book does not Exist', HttpStatus.NOT_FOUND);
 
-    const oldBook = this.books.get(id);
-    this.books.set(id, {...oldBook, ...updateBookDto})
+    const oldBook = this.books.get(bookId);
+    this.books.set(bookId, {...oldBook, ...updateBookDto})
   
-    return this.books.get(id);
+    return this.books.get(bookId);
   }
 
-  getBooks() {
+  getBooks(): Book[] {
     return Array.from(this.books.values())
+  }
+
+  getOneBook(bookId: number): Book {
+    if(!this.books.has(bookId))
+      throw new HttpException('Book does not Exist', HttpStatus.NOT_FOUND);
+
+    return this.books.get(bookId)
   }
 }

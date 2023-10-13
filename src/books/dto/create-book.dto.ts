@@ -3,22 +3,22 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 export class CreateBookDto {
   @IsNumber()
   @IsNotEmpty()
-  id: number;
+  bookId: number;
 
   @IsString()
   @IsNotEmpty()
   title: string;
 
   @IsString()
-  @IsNotEmpty()
-  author: string;
+  @IsOptional()
+  genre: string;
 
   @IsString()
   @IsOptional()
   isbn: string;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   pages: number;
 
   @IsNumber()
